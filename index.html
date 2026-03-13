@@ -1,15 +1,59 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-  <title>Liste utilisateurs</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Login | SPI Team CESI</title>
+<link rel="stylesheet" href="style.css">
+
 </head>
+
 <body>
 
-<h1>Utilisateurs</h1>
+<div class="login-card">
+<h2>CESI Admin</h2>
+<h3>Entrez vos identifiants</h3>
 
-<ul id="users"></ul>
+<form id="loginForm" class="login-form">
 
-<script type="module" src="script.js"></script>
+<input id="username" type="text" placeholder="Identifiant" required>
+<input id="password" type="password" placeholder="Mot de passe" required>
+
+<a href="#">Mot de passe oublié</a>
+
+<button type="submit">CONNEXION</button>
+
+</form>
+</div>
+
+<script>
+
+const adminUser = "gary"
+const adminPassword = "gary"
+
+document.getElementById("loginForm").addEventListener("submit", function(e){
+
+e.preventDefault()
+
+const username = document.getElementById("username").value
+const password = document.getElementById("password").value
+
+if(username === adminUser && password === adminPassword){
+
+localStorage.setItem("logged","true")
+
+window.location.href = "logs.html"
+
+}else{
+
+alert("Identifiants incorrects")
+
+}
+
+})
+
+</script>
 
 </body>
 </html>

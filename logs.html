@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des badges | SPI Team CESI</title>
+    <link rel="stylesheet" href="logs.css">
+</head>
+<body>
+
+    <a href="#" class="logout-btn" id="btn-logout">Déconnexion</a>
+
+    <div class="container">
+        <h1>Personnes enregistrées</h1>
+
+        <div class="log-table">
+            <div class="log-row header-row">
+                <span class="prenom">Prénom</span>
+                <span class="nom">Nom</span>
+                <span class="date">Date</span>
+                <span class="heure">Heure</span>
+            </div>
+
+            <div id="logs-container">
+                <div class="log-row" style="justify-content: center; border-left: none;">
+                    <p style="color: #666;">Chargement des données...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js"
+
+        const SUPABASE_URL = "https://fjksprfocmyqebjfxftf.supabase.co"
+        const SUPABASE_KEY = "sb_publishable_A3J91eJqawcbb2s6a-8vRQ_9bOFqaE_"
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+        // Sécurité session
+        if (localStorage.getItem("logged") !== "true") {
+            window.location.href = "login.html"
+        }
+
+        // Déconnexion
+        document.getElementById("btn-logout").addEventListener("click", (e) => {
+            e.preventDefault()
+            localStorage.removeItem("logged")
+            window.location.href = "login.html"
+        })
+
+        async function loadUsers() {
+            const container = document.getElementById("logs-container")
+
+            // ATTENTION : "date" et "heure" doivent être en minuscules comme sur ta capture !
+            const { data, error } = await supabase
+                .from("users")
+                .select("*")
+                .order('date', { ascending: false }) 
+                .order('heure', { ascending: false })
+
+            if (error) {
+                console.error("Erreur Supabase:", error);
+                container.innerHTML = `<p style="color: #ff4444; text-align: center; padding: 20px;">Erreur : ${error.message}</p>`
+                return
+            }
+
+            container.innerHTML = "" 
+
+            if (!data || data.length === 0) {
+                container.innerHTML = "<p style='text-align: center; padding: 20px;'>Aucun passage détecté.</p>"
+                return
+            }
+
+            data.forEach(user => {
+                const row = document.createElement("div")
+                row.className = "log-row"
+                
+                row.innerHTML = `
+                    <span class="prenom">${user.prenom || '-'}</span>
+                    <span class="nom">${user.nom || '-'}</span>
+                    <span class="date">${user.date || '-'}</span>
+                    <span class="heure">${user.heure || '-'}</span>
+                `
+                container.appendChild(row)
+            })
+        }
+
+        loadUsers()
+    </script>
+</body>
+</html>
