@@ -1,59 +1,54 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Login | SPI Team CESI</title>
-<link rel="stylesheet" href="style.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | SPI Team CESI</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
+    <div class="login-card">
+        <h2>CESI Admin</h2>
+        <h3>Entrez vos identifiants</h3>
+        <form id="loginForm" class="login-form">
+            <input id="username" type="text" placeholder="Identifiant" required>
+            <input id="password" type="password" placeholder="Mot de passe" required>
+            <button type="submit" id="submitBtn">CONNEXION</button>
+        </form>
+    </div>
 
-<div class="login-card">
-<h2>CESI Admin</h2>
-<h3>Entrez vos identifiants</h3>
+    <script>
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById("submitBtn");
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
 
-<form id="loginForm" class="login-form">
+        btn.innerText = "Vérification...";
+        btn.disabled = true;
 
-<input id="username" type="text" placeholder="Identifiant" required>
-<input id="password" type="password" placeholder="Mot de passe" required>
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
 
-<a href="#">Mot de passe oublié</a>
+            const result = await response.json();
 
-<button type="submit">CONNEXION</button>
-
-</form>
-</div>
-
-<script>
-
-const adminUser = "gary"
-const adminPassword = "gary"
-
-document.getElementById("loginForm").addEventListener("submit", function(e){
-
-e.preventDefault()
-
-const username = document.getElementById("username").value
-const password = document.getElementById("password").value
-
-if(username === adminUser && password === adminPassword){
-
-localStorage.setItem("logged","true")
-
-window.location.href = "logs.html"
-
-}else{
-
-alert("Identifiants incorrects")
-
-}
-
-})
-
-</script>
-
+            if (result.success) {
+                localStorage.setItem("logged", "true");
+                window.location.href = "logs.html";
+            } else {
+                alert("Identifiants incorrects");
+            }
+        } catch (err) {
+            alert("Erreur de connexion");
+        } finally {
+            btn.innerText = "CONNEXION";
+            btn.disabled = false;
+        }
+    });
+    </script>
 </body>
 </html>

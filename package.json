@@ -1,7 +1,6 @@
 {
-  "name": "vercel-supabase-demo",
+  "name": "LOGIN-SPI",
   "version": "1.0.0",
-  "description": "site simple avec supabase",
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0"
   }

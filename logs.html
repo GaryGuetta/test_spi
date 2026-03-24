@@ -4,15 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liste des badges | SPI Team CESI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="logs.css">
 </head>
 <body>
 
     <a href="#" class="logout-btn" id="btn-logout">Déconnexion</a>
 
-    <div class="container">
-        <h1>Personnes enregistrées</h1>
+    <div class="stats-outer-wrapper">
+        <div class="stat-card">
+            <div class="stat-number" id="day-count">0</div>
+            <div class="stat-text">Visites ce jour</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="week-count">0</div>
+            <div class="stat-text">Cette semaine</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="month-count">0</div>
+            <div class="stat-text">Visites ce mois</div>
+        </div>
+    </div>
 
+    <div class="container main-container">
+        <h1>Personnes enregistrées</h1>
         <div class="log-table">
             <div class="log-row header-row">
                 <span class="prenom">Prénom</span>
@@ -20,13 +35,26 @@
                 <span class="date">Date</span>
                 <span class="heure">Heure</span>
             </div>
-
             <div id="logs-container">
-                <div class="log-row" style="justify-content: center; border-left: none;">
-                    <p style="color: #666;">Chargement des données...</p>
+                <div class="log-row" style="justify-content:center; border-left:none;">
+                    <p style="color:#666;">Chargement des données...</p>
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="add-user-box">
+        <h2>Ajouter une personne</h2>
+        <form id="add-user-form">
+            <div class="input-group">
+                <input type="text" id="prenom-input" placeholder="Prénom" required>
+                <input type="text" id="nom-input" placeholder="Nom" required>
+                <button type="submit" class="btn-add-icon">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </form>
+        <p id="add-message"></p>
     </div>
 
     <script type="module">
@@ -36,56 +64,84 @@
         const SUPABASE_KEY = "sb_publishable_A3J91eJqawcbb2s6a-8vRQ_9bOFqaE_"
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-        // Sécurité session
-        if (localStorage.getItem("logged") !== "true") {
-            window.location.href = "login.html"
-        }
+        if(localStorage.getItem("logged") !== "true") window.location.href = "login.html"
 
-        // Déconnexion
-        document.getElementById("btn-logout").addEventListener("click", (e) => {
+        document.getElementById("btn-logout").addEventListener("click",(e)=>{
             e.preventDefault()
             localStorage.removeItem("logged")
-            window.location.href = "login.html"
+            window.location.href="login.html"
         })
 
-        async function loadUsers() {
-            const container = document.getElementById("logs-container")
+        async function updateStats(data) {
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+            const todayCount = data.filter(u => u.date === todayStr).length;
+            const monthCount = data.filter(u => {
+                if(!u.date) return false;
+                const d = new Date(u.date);
+                return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            }).length;
 
-            // ATTENTION : "date" et "heure" doivent être en minuscules comme sur ta capture !
-            const { data, error } = await supabase
+            document.getElementById("day-count").innerText = todayCount;
+            document.getElementById("week-count").innerText = data.length; 
+            document.getElementById("month-count").innerText = monthCount;
+        }
+
+        async function loadUsers(){
+            const container = document.getElementById("logs-container")
+            const {data, error} = await supabase
                 .from("users")
                 .select("*")
-                .order('date', { ascending: false }) 
-                .order('heure', { ascending: false })
+                .order("date",{ascending:false})
+                .order("heure",{ascending:false})
 
-            if (error) {
-                console.error("Erreur Supabase:", error);
-                container.innerHTML = `<p style="color: #ff4444; text-align: center; padding: 20px;">Erreur : ${error.message}</p>`
+            if(error) {
+                container.innerHTML = `<p style="color:red">Erreur : ${error.message}</p>`
                 return
             }
 
-            container.innerHTML = "" 
-
-            if (!data || data.length === 0) {
-                container.innerHTML = "<p style='text-align: center; padding: 20px;'>Aucun passage détecté.</p>"
+            container.innerHTML=""
+            if(!data || data.length === 0){
+                container.innerHTML="<p style='padding:20px;text-align:center;'>Aucun passage détecté</p>"
                 return
             }
 
-            data.forEach(user => {
+            updateStats(data);
+
+            data.forEach(user=>{
                 const row = document.createElement("div")
-                row.className = "log-row"
-                
-                row.innerHTML = `
-                    <span class="prenom">${user.prenom || '-'}</span>
-                    <span class="nom">${user.nom || '-'}</span>
-                    <span class="date">${user.date || '-'}</span>
-                    <span class="heure">${user.heure || '-'}</span>
+                row.className="log-row"
+                row.innerHTML=`
+                    <span class="prenom">${user.prenom || "-"}</span>
+                    <span class="nom">${user.nom || "-"}</span>
+                    <span class="date">${user.date || "-"}</span>
+                    <span class="heure">${user.heure || "-"}</span>
                 `
                 container.appendChild(row)
             })
         }
 
         loadUsers()
+
+        document.getElementById("add-user-form").addEventListener("submit", async (e)=>{
+            e.preventDefault()
+            const prenom = document.getElementById("prenom-input").value.trim()
+            const nom = document.getElementById("nom-input").value.trim()
+            
+            // On envoie uniquement le nom et le prénom
+            const {error} = await supabase.from("users").insert([{
+                prenom, 
+                nom
+            }])
+
+            if(!error){
+                document.getElementById("add-user-form").reset()
+                loadUsers()
+            }
+        })
     </script>
 </body>
 </html>
